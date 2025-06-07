@@ -105,16 +105,20 @@ int main() {
   retrossubs(A, b, alpha, n); 
   tEG = timestamp() - tEG;
 
+  
   // Imprime coeficientes
+  printf("\n Ajuste de curva de grau %d com %lld pontos\n", N, p);
   for (int i = 0; i < n; ++i)
     printf("%1.15e ", alpha[i]);
   puts("");
 
   // Imprime resíduos
+  printf("\n Resíduos:\n");
   for (long long int i = 0; i < p; ++i)
     printf("%1.15e ", fabs(y[i] - P(x[i],N,alpha)) );
   puts("");
 
+  printf("\n Tempos:\n");
   // Imprime os tempos
   printf("%lld %1.10e %1.10e\n", K, tSL, tEG);
 

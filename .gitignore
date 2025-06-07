@@ -1,0 +1,74 @@
+# Executáveis
+ajustePol
+gera_entrada
+*.exe
+*.out
+a.out
+
+# Arquivos objeto e bibliotecas
+*.o
+*.a
+*.so
+*.dylib
+
+# Arquivos de debug
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Arquivos temporários do compilador
+*.gch
+*.pch
+
+# Arquivos de entrada/saída de teste
+entrada.txt
+saida.txt
+resultado.txt
+*.dat
+*.csv
+
+# Arquivos de profiling e benchmarking
+gmon.out
+*.gcov
+*.gcda
+*.gcno
+
+# Arquivos temporários do sistema
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+*.swp
+*.swo
+*.tmp
+
+# Diretórios de build
+build/
+dist/
+bin/
+obj/
+
+# Arquivos do IDE/Editor
+.vscode/
+.idea/
+*.code-workspace
+*.sublime-*
+
+# Arquivos de log
+*.log
+
+# Arquivos de backup
+*.bak
+*.backup
+*~
+
+# Core dumps
+core
+core.*
+
+# Arquivos específicos do projeto
