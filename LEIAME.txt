@@ -1,0 +1,153 @@
+================================================================================
+RELATÓRIO DE ANÁLISE DE DESEMPENHO - AJUSTE POLINOMIAL
+================================================================================
+
+================================================================================
+1. SOBRE O TRABALHO
+================================================================================
+
+Este trabalho implementa e analisa o desempenho de algoritmos para ajuste 
+polinomial por mínimos quadrados. O objetivo é comparar duas implementações:
+uma versão básica (v1) e uma versão otimizada (v2) do mesmo algoritmo.
+
+PROBLEMA ABORDADO:
+Dado um conjunto de K pontos (x_i, y_i), encontrar os coeficientes α_j de um 
+polinômio de grau N que melhor se ajusta aos dados:
+
+    P(x) = α_0 + α_1*x + α_2*x² + ... + α_N*x^N
+
+O método resolve o sistema linear normal:
+    A * α = b
+onde A_ij = Σ(x_k^(i+j)) e b_i = Σ(x_k^i * y_k)
+
+METODOLOGIA DE ANÁLISE:
+- Testes com diferentes graus de polinômio (N=10, N=1000)
+- Variação do número de pontos K (64 até 100.000.000)
+- Métricas coletadas: tempo de execução, consumo de energia, FLOPS
+- Instrumentação com LIKWID para análise detalhada de performance
+- Duas fases principais: geração do sistema linear e eliminação de Gauss
+
+AMBIENTE DE TESTE:
+- Processador: Intel Core i5-10210U @ 1.60GHz (Kabylake)
+- Frequência fixa em modo "performance"
+- Core isolado (CPU_CORE=3) para medições precisas
+- Grupos LIKWID: L3CACHE, ENERGY, FLOPS_DP
+
+================================================================================
+2. OTIMIZAÇÕES IMPLEMENTADAS
+================================================================================
+
+A versão otimizada (ajustePolv2.c) implementa diversas melhorias sobre a 
+versão básica (ajustePolv1.c):
+
+--------------------------------------------------------------------------------
+2.1 QUALIFICADORES RESTRICT
+--------------------------------------------------------------------------------
+
+OTIMIZAÇÃO:
+Adição de qualificadores 'restrict' em ponteiros de parâmetros de função:
+- double **restrict A, double *restrict b
+- double *restrict x, double *restrict y
+
+MOTIVO:
+O qualificador 'restrict' informa ao compilador que os ponteiros não se 
+sobrepõem (aliasing), permitindo otimizações mais agressivas como:
+- Vetorização automática de loops
+- Reordenação de operações
+- Melhor uso de registradores
+- Eliminação de verificações redundantes de dependência
+
+--------------------------------------------------------------------------------
+2.2 CACHE DE VARIÁVEIS NA ELIMINAÇÃO
+--------------------------------------------------------------------------------
+
+OTIMIZAÇÃO:
+v1: Acesso direto repetido (A[i][j], b[i])
+v2: Cache de ponteiros e valores:
+    double *restrict Ai = A[i];      // Cache ponteiro da linha
+    double pivot = Ai[i];            // Cache valor do pivô
+    double bi = b[i];                // Cache elemento do vetor
+
+MOTIVO:
+- Reduz acessos à memória (de O(n²) para O(n))
+- Melhora localidade temporal
+- Permite melhor otimização pelo compilador
+- Reduz latência de acesso a dados
+
+--------------------------------------------------------------------------------
+2.3 MÉTODO DE HORNER PARA AVALIAÇÃO POLINOMIAL
+--------------------------------------------------------------------------------
+
+OTIMIZAÇÃO:
+v1 (método direto):
+    double Px = alpha[0];
+    for (i = 1; i <= N; ++i)
+        Px += alpha[i]*pow(x,i);     // O(N²) - pow() a cada iteração
+
+v2 (método de Horner):
+    double result = alpha[N];
+    for (i = N-1; i >= 0; --i)
+        result = result * x + alpha[i];  // O(N) - apenas multiplicações
+
+MOTIVO:
+- Reduz complexidade de O(N²) para O(N)
+- Elimina chamadas custosas à função pow()
+- Melhora estabilidade numérica
+- Operações uniformes favoráveis à vetorização
+
+--------------------------------------------------------------------------------
+2.4 OTIMIZAÇÃO DE CACHE DE EXPOENTES
+--------------------------------------------------------------------------------
+
+OTIMIZAÇÃO:
+v1: Cálculo direto pow(x[k], i+j)
+v2: Cache do expoente:
+    long long int exp = i + j;
+    for (k = 0; k < p; ++k)
+        A[i][j] += pow(x[k], exp);
+
+MOTIVO:
+- Evita recálculo de (i+j) a cada iteração
+- Reduz operações aritméticas no loop interno
+- Melhora legibilidade e manutenibilidade
+- Pequeno ganho em loops intensivos
+
+--------------------------------------------------------------------------------
+2.5 ESTRUTURA DE LOOPS VETORIZÁVEL
+--------------------------------------------------------------------------------
+
+OTIMIZAÇÃO:
+v2 organiza loops com operações uniformes e sem dependências:
+    for (long long int j = i + 1; j < n; ++j) {
+        Ak[j] -= Ai[j] * m;          // Operação uniforme
+    }
+
+MOTIVO:
+- Permite vetorização automática (SIMD)
+- Melhora throughput de operações de ponto flutuante
+- Exploita paralelismo a nível de instrução
+- Aumenta utilização de unidades funcionais
+
+================================================================================
+3. SOBRE OS RESULTADOS
+================================================================================
+
+[SEÇÃO RESERVADA PARA ANÁLISE DOS RESULTADOS EXPERIMENTAIS]
+
+Os resultados experimentais serão apresentados através de:
+- Gráficos de tempo de execução (escala log-log)
+- Análise de consumo de energia
+- Métricas de FLOPS (DP e AVX)
+- Comparação de eficiência entre versões
+- Análise de escalabilidade com o tamanho do problema
+
+
+
+[DADOS E GRÁFICOS ESTÃO DISPONÍVEIS NAS SUBPASTAS DO PROJETO]
+
+================================================================================
+CONCLUSÃO
+================================================================================
+
+
+================================================================================
