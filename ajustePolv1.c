@@ -112,15 +112,18 @@ int main() {
   LIKWID_MARKER_STOP("ajustePolElimGauss");
   LIKWID_MARKER_CLOSE;
 
-  // Imprime coeficientes
-  for (long long int i = 0; i < n; ++i)
-    printf("%1.15e ", alpha[i]);
-  puts("");
+  // imprime apenas se k < 1000
+  if (K < 1000) {
+    // Imprime coeficientes
+    for (long long int i = 0; i < n; ++i)
+      printf("%1.15e ", alpha[i]);
+    puts("");
 
-  // Imprime resíduos
-  for (long long int i = 0; i < p; ++i)
-    printf("%1.15e ", fabs(y[i] - P(x[i],N,alpha)) );
-  puts("");
+    // Imprime resíduos
+    for (long long int i = 0; i < p; ++i)
+      printf("%1.15e ", fabs(y[i] - P(x[i],N,alpha)) );
+    puts("");
+  }
 
   // Imprime os tempos
   printf("%lld %1.10e %1.10e\n", K, tSL, tEG);

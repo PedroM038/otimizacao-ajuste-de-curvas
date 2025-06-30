@@ -20,8 +20,8 @@ N1=10
 N2=1000
 
 # Parâmetros de teste - Número de pontos (K)
-declare -a K_VALUES=(64 128 200 256 512 600 800 1024)
-declare -a K_EXTRA=(2000)  # Apenas para N1
+declare -a K_VALUES=(64 128 200 256 512 600 800 1024 2000 3000 4096 6000 7000 10000 50000 100000)
+declare -a K_EXTRA=(1000000 10000000 100000000)  # Apenas para N1
 
 # Grupos LIKWID para diferentes métricas
 declare -a LIKWID_GROUPS=("L3CACHE" "ENERGY" "FLOPS_DP")
@@ -42,7 +42,7 @@ echo
 compile_programs() {
     echo "Compilando programas com gcc -O3 -mavx -march=native..."
     make clean
-    make CC=gcc CFLAGS="-O3 -mavx -march=native -DLIKWID_PERFMON" all
+    make CC=gcc CFLAGS="-O3 -mavx -march=native -DLIKWID_PERFMON -I${LIKWID_INCLUDE}" all
     echo "Compilação concluída."
     echo
 }
@@ -67,8 +67,8 @@ run_likwid_test() {
     echo "Executando: $program com K=$k, N=$n, Grupo=$group"
     
     # Gerar entrada e executar com LIKWID
-    timeout 300 bash -c "./gera_entrada $k $n | likwid-perfctr -C $CPU_CORE -g $group -m ./$program" >> $output_file 2>&1 || {
-        echo "TIMEOUT ou ERRO para K=$k N=$n" >> $output_file
+    bash -c "./gera_entrada $k $n | likwid-perfctr -C $CPU_CORE -g $group -m ./$program" >> $output_file 2>&1 || {
+        echo "ERRO para K=$k N=$n" >> $output_file
         return 1
     }
     
@@ -85,8 +85,8 @@ run_time_test() {
     echo "Executando teste de tempo: $program com K=$k, N=$n"
     
     echo "=== Execução ===" >> $output_file
-    timeout 300 bash -c "./gera_entrada $k $n | ./$program" >> $output_file 2>&1 || {
-        echo "TIMEOUT ou ERRO para K=$k N=$n" >> $output_file
+    bash -c "./gera_entrada $k $n | ./$program" >> $output_file 2>&1 || {
+        echo "ERRO para K=$k N=$n" >> $output_file
         return 1
     }
     return 0
@@ -216,8 +216,8 @@ extract_flops_data() {
                     continue
                 fi
                 
-                # Procurar pelas linhas com DP [MFLOP/s] e AVX DP [MFLOP/s]
-                if [[ $line =~ \|[[:space:]]*DP[[:space:]]\[MFLOP/s\][[:space:]]*\|[[:space:]]*([0-9]+\.?[0-9]*([eE][+-]?[0-9]+)?)[[:space:]]*\| ]]; then
+                # Procurar pelas linhas com DP MFLOP/s e AVX DP MFLOP/s
+                if [[ $line =~ \|[[:space:]]*DP[[:space:]]MFLOP/s[[:space:]]*\|[[:space:]]*([0-9]+\.?[0-9]*([eE][+-]?[0-9]+)?)[[:space:]]*\| ]]; then
                     local dp_value="${BASH_REMATCH[1]}"
                     
                     if [[ $in_gerasl_region == true ]]; then
@@ -229,7 +229,7 @@ extract_flops_data() {
                     fi
                 fi
                 
-                if [[ $line =~ \|[[:space:]]*AVX[[:space:]]DP[[:space:]]\[MFLOP/s\][[:space:]]*\|[[:space:]]*([0-9]+\.?[0-9]*([eE][+-]?[0-9]+)?)[[:space:]]*\| ]]; then
+                if [[ $line =~ \|[[:space:]]*AVX[[:space:]]DP[[:space:]]MFLOP/s[[:space:]]*\|[[:space:]]*([0-9]+\.?[0-9]*([eE][+-]?[0-9]+)?)[[:space:]]*\| ]]; then
                     local avx_value="${BASH_REMATCH[1]}"
                     
                     if [[ $in_gerasl_region == true ]]; then
@@ -246,7 +246,7 @@ extract_flops_data() {
                         fi
                     fi
                 fi
-                
+
             done < "$input_file"
             
             echo "  Arquivo $output_file gerado com sucesso"

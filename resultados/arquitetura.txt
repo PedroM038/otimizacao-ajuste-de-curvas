@@ -58,7 +58,7 @@ NUMA domains:		1
 Domain:			0
 Processors:		( 0 1 2 3 )
 Distances:		10
-Free memory:		170.539 MB
+Free memory:		6963.49 MB
 Total memory:		7825.64 MB
 --------------------------------------------------------------------------------
 
